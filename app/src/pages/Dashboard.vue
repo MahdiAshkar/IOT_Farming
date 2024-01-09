@@ -1,5 +1,19 @@
 <template>
-  <div class="content">
+  <div v-if="dailyTempChart.data.labels.length == 0">
+    <div class="page-loader">
+        <div class="cube">F<img src="@/assets/img/favicon.png"></div>
+        <div class="cube">A</div>
+        <div class="cube">R</div>
+        <div class="cube">M</div>
+        <div class="cube">S</div>
+        <div class="cube">M</div>
+        <div class="cube">A</div>
+        <div class="cube">R</div>
+        <div class="cube">T<img src="@/assets/img/favicon.png"></div>
+    </div>
+  </div>
+  <div v-else-if="dailyTempChart.data.labels.length != 0">
+    <div class="content">
     <div class="md-layout">
       <div
         class="md-layout-item md-medium-size-100 md-xsmall-size-100 md-size-33"
@@ -22,7 +36,7 @@
           <template slot="footer">
             <div class="stats">
               <md-icon>access_time</md-icon>
-              updated 4 minutes ago
+              Updated in the last {{ timeDifference }}
             </div>
           </template>
         </chart-card>
@@ -48,7 +62,7 @@
           <template slot="footer">
             <div class="stats">
               <md-icon>access_time</md-icon>
-              updated 4 minutes ago
+              Updated in the last {{ timeDifference }}
             </div>
           </template>
         </chart-card>
@@ -74,7 +88,7 @@
           <template slot="footer">
             <div class="stats">
               <md-icon>access_time</md-icon>
-              updated 4 minutes ago
+              Updated in the last {{ timeDifference }}
             </div>
           </template>
         </chart-card>
@@ -88,7 +102,8 @@
             <div class="card">
               <div class="rating">
                 <h2><span class="counter">{{ circleTemp }}</span><sub>°C</sub></h2>
-                <div class="block_temp" v-for="i in numbers" v-bind:key="getItemStyle(i)" :style="getItemStyle(i)"></div>
+                <div class="block_temp" v-for="i in numbers" v-bind:key="getItemStyleTemp(i)" :style="getItemStyleTemp(i)">
+                </div>
               </div>
             </div>
           </template>
@@ -104,7 +119,9 @@
           <template slot="footer">
             <div class="stats">
               <md-icon>date_range</md-icon>
-              Last 3 Min.
+              <div class="stats">
+                {{ timeDifference }} ago.
+              </div>
             </div>
           </template>
         </stats-card>
@@ -118,7 +135,7 @@
             <div class="card">
               <div class="rating">
                 <h2><span class="counter">{{ circleHum }}</span><sub>%</sub></h2>
-                <div class="block_hum" v-for="i in numbers" v-bind:key="getItemStyle(i)" :style="getItemStyle(i)"></div>
+                <div class="block_hum" v-for="i in numbers" v-bind:key="getItemStyleHum(i)" :style="getItemStyleHum(i)"></div>
               </div>
             </div>
           </template>
@@ -131,7 +148,9 @@
           <template slot="footer">
             <div class="stats">
               <md-icon>date_range</md-icon>
-              Last 3 Min.
+              <div class="stats">
+                {{ timeDifference }} ago.
+              </div>
             </div>
           </template>
         </stats-card>
@@ -145,7 +164,7 @@
             <div class="card">
               <div class="rating">
                 <h2><span :class="getdegTemp">{{ circleSoil }}</span><sub>%</sub></h2>
-                <div class="block_eco" v-for="i in numbers" v-bind:key="getItemStyle(i)" :style="getItemStyle(i)">
+                <div class="block_soil" v-for="i in numbers" v-bind:key="getItemStyleSoil(i)" :style="getItemStyleSoil(i)">
                 </div>
               </div>
             </div>
@@ -159,7 +178,9 @@
           <template slot="footer">
             <div class="stats">
               <md-icon>date_range</md-icon>
-              Last 3 Min.
+              <div class="stats">
+                {{ timeDifference }} ago.
+              </div>
             </div>
           </template>
         </stats-card>
@@ -172,7 +193,7 @@
             <md-icon>local_florist</md-icon>
             <div class="card">
               <div class="rating">
-                <h2><span class="count">67</span><sub>Days</sub></h2>
+                <h2><span class="count">{{ dateDifference }}</span><sub>Days</sub></h2>
               </div>
             </div>
           </template>
@@ -185,7 +206,7 @@
           <template slot="footer">
             <div class="stats">
               <md-icon>update</md-icon>
-              2023/10/20
+              {{ startDate }}
             </div>
           </template>
         </stats-card>
@@ -208,24 +229,25 @@
       >
         <nav-tabs-card>
           <template slot="content">
-            <span class="md-nav-tabs-title">Tasks:</span>
+            <span class="md-nav-tabs-title"></span>
             <md-tabs class="md-success" md-alignment="left">
-              <md-tab id="tab-home" md-label="Bugs" md-icon="bug_report">
+              <md-tab id="tab-home" md-label="Tasks" md-icon="add_task">
                 <nav-tabs-table></nav-tabs-table>
               </md-tab>
 
-              <md-tab id="tab-pages" md-label="Website" md-icon="code">
+              <!-- <md-tab id="tab-pages" md-label="Website" md-icon="code">
                 <nav-tabs-table></nav-tabs-table>
               </md-tab>
 
               <md-tab id="tab-posts" md-label="server" md-icon="cloud">
                 <nav-tabs-table></nav-tabs-table>
-              </md-tab>
+              </md-tab> -->
             </md-tabs>
           </template>
         </nav-tabs-card>
       </div>
     </div>
+  </div>
   </div>
 </template>
 
@@ -249,6 +271,13 @@ export default {
   },
   data() {
     return {
+      lable: 0,
+      startDate: '2023-12-28',
+      endDate: '',
+      dateDifference: null,
+      startTime: '',
+      endTime: '',
+      timeDifference: null,
       thingspeak: [],
       numbers: [],
       circleTemp: "",
@@ -263,8 +292,8 @@ export default {
           lineSmooth: this.$Chartist.Interpolation.cardinal({
             tension: 0,
           }),
-          low: 0,
-          high: 50, // creative tim: we recommend you to set the high sa the biggest value + something for a better look
+          low: 20,
+          high: 30, // creative tim: we recommend you to set the high sa the biggest value + something for a better look
           chartPadding: {
             top: 0,
             right: 0,
@@ -301,8 +330,8 @@ export default {
           lineSmooth: this.$Chartist.Interpolation.cardinal({
             tension: 0,
           }),
-          low: 0,
-          high: 100, // creative tim: we recommend you to set the high sa the biggest value + something for a better look
+          low: 20,
+          high: 60, // creative tim: we recommend you to set the high sa the biggest value + something for a better look
           chartPadding: {
             top: 0,
             right: 0,
@@ -317,45 +346,173 @@ export default {
   },
   created() {
     this.fetchData();
-    this.numbers = Array.from(Array(51).keys());
+    this.numbers = Array.from(Array(50).keys());
   },
   computed: {
   },
   methods: {
     fetchData() {
-      const url = 'https://api.thingspeak.com/channels/2389978/feeds.json?api_key=7F5ZOP8I2C34NSN9&results=14';
+      const url = 'https://api.thingspeak.com/channels/2389978/feeds.json?api_key=7F5ZOP8I2C34NSN9&results=8';
       axios.get(url)
         .then(response => {
           this.thingspeak = response.data.feeds;
 
           this.circleTemp = this.thingspeak[7].field1.slice(0,4);
           this.circleHum = this.thingspeak[7].field2.slice(0,4);
-          this.circleSoil = parseInt((parseInt(this.thingspeak[7].field3))*100/1023);          
+          this.circleSoil = parseInt((parseInt(this.thingspeak[7].field3))*100/1023);  
 
-          for (var i = 1; i < this.thingspeak.length+2; i++) {
-            this.dailyTempChart.data.series[0].push(parseInt(this.thingspeak[2*i+1].field1));
-            this.dailyTempChart.data.labels.push(this.thingspeak[2*i+1].created_at.slice(12,16));
-            this.dailyHumChart.data.series[0].push(parseInt(this.thingspeak[2*i+1].field2));
-            this.dailyHumChart.data.labels.push(this.thingspeak[2*i+1].created_at.slice(12,16));
-            this.dailySoilChart.data.series[0].push(parseInt(this.thingspeak[2*i+1].field3));
-            this.dailySoilChart.data.labels.push(this.thingspeak[2*i+1].created_at.slice(12,16));
+          this.endDate = this.thingspeak[7].created_at.slice(0,10);
+          this.calculateDateDifference();
+
+          this.startTime = this.thingspeak[7].created_at.slice(0,20);
+          this.endTime = new Date();
+          this.calculateTimeDifference();
+
+          for (var i = 0; i < this.thingspeak.length+1; i++) {
+            this.dailyTempChart.data.series[0].push(parseInt(this.thingspeak[i].field1));
+            this.dailyTempChart.data.labels.push((this.convertToIranTime(this.thingspeak[i].created_at.slice(0,20)))
+            .slice(11,16));
+            this.dailyHumChart.data.series[0].push(parseInt(this.thingspeak[i].field2));
+            this.dailyHumChart.data.labels.push((this.convertToIranTime(this.thingspeak[i].created_at.slice(0,20)))
+            .slice(11,16));
+            this.dailySoilChart.data.series[0].push(parseInt(this.thingspeak[i].field3));
+            this.dailySoilChart.data.labels.push((this.convertToIranTime(this.thingspeak[i].created_at.slice(0,20)))
+            .slice(11,16));
           }
         })
         .catch(error => {
           console.error(error);
         });
     },
-    getItemStyle(event){
-      return {
-        transform: `rotate(${7.2*event}deg)`,
-        animationDelay: `${event/15}s`
+    getItemStyleTemp(event){
+      let circlechild = Math.floor(((parseInt(this.circleTemp))*50)/100);;
+      if (event <= circlechild) {
+          return {
+          transform: `rotate(${7.2*event}deg)`,
+          animationDelay: `${event/15}s`,
+          background: `rgb(255, 16, 16)`,
+        }
       }
+      else {
+        return {
+          transform: `rotate(${7.2*event}deg)`,
+          animationDelay: `${event/15}s`,
+        }
+      }
+    },
+    getItemStyleHum(event){
+      let circlechild = Math.floor(((parseInt(this.circleHum))*50)/100);;
+      if (event <= circlechild) {
+          return {
+          transform: `rotate(${7.2*event}deg)`,
+          animationDelay: `${event/15}s`,
+          background: `rgb(0, 255, 251)`,
+        }
+      }
+      else {
+        return {
+          transform: `rotate(${7.2*event}deg)`,
+          animationDelay: `${event/15}s`,
+        }
+      }
+    },
+    getItemStyleSoil(event){
+      let circlechild = Math.floor(((parseInt(this.circleSoil))*50)/100);
+      if (event <= circlechild-1) {
+          return {
+          transform: `rotate(${7.2*event}deg)`,
+          animationDelay: `${event/15}s`,
+          background: `rgb(255, 242, 0)`,
+        }
+      }
+      else {
+        return {
+          transform: `rotate(${7.2*event}deg)`,
+          animationDelay: `${event/15}s`,
+        }
+      }
+    },
+    calculateDateDifference() {
+      const start = new Date(this.startDate);
+      const end = new Date(this.endDate);
+      const differenceInTime = end.getTime() - start.getTime();
+      const differenceInDays = Math.floor(differenceInTime / (1000 * 3600 * 24));
+      this.dateDifference = differenceInDays;
+    },
+    convertToIranTime(originalTime) {
+      const utcTime = new Date(originalTime); // Get the original time in UTC
+      const iranTimezoneOffset = 3.5 * 60; // Iran time zone offset in minutes (3.5 hours ahead of UTC)
+      const iranTime = new Date(utcTime.getTime() + iranTimezoneOffset * 60 * 1000); // Add the offset to the UTC time
+
+      return iranTime.toISOString(); // Return the Iran time in ISO 8601 format
+    },
+    calculateTimeDifference() {
+      const start = new Date(this.startTime);
+      const end = new Date(this.endTime);
+      const diffInMillis = end.getTime() - start.getTime(); // Calculate the time difference in milliseconds
+
+      // Convert the time difference to hours, minutes, and seconds
+      const hours = Math.floor(diffInMillis / (1000 * 60 * 60));
+      const minutes = Math.floor((diffInMillis % (1000 * 60 * 60)) / (1000 * 60));
+      const seconds = Math.floor((diffInMillis % (1000 * 60)) / 1000);
+
+      this.timeDifference = `${hours}h ${minutes}m ${seconds}s`; // Format the time difference as desired
     },
   },
 };
 </script>
 
-<style scoped>
+<style lang="scss" scoped>
+$colors: #8cc271, #69beeb, #f5aa39, #e9643b, #58b928, #2685b9, #cf8921, #eb4a19, #fba68c;
+.page-loader {
+  position:fixed;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  background-color: #333;
+  z-index: 999;
+}
+.cube {
+  width: 70px;
+  height: 70px;
+  margin-right: 10px;
+  font-size: 60px;
+  color: #1a0000;
+  font-weight: 300;
+
+  @for $i from 1 through length($colors) {
+    &:nth-child(#{$i}) {
+      background-color: nth($colors, $i );
+    }
+  }
+
+  &:first-child {
+    animation: left 1s infinite; 
+  }
+  &:last-child {
+    animation: right 1s infinite 0.5s; 
+  }
+}
+@keyframes left {
+  40%{
+    transform: translate(-60px);
+  }
+  50%{
+    transform: translate(0);
+  }
+}
+@keyframes right {
+  40%{
+    transform: translate(60px);
+  }
+  50%{
+    transform: translate(0);
+  }
+}
 .card {
   position: relative;
   width: 100px;
@@ -376,10 +533,6 @@ export default {
   opacity: 0;
   animation: animate 0.1s linear forwards;
 }
-.card .rating .block_temp:nth-child(-n+13){
-  background: rgb(255, 16, 16);
-  box-shadow: 0 0 15px rgb(255, 16, 16), 0 0 30px rgb(255, 16, 16);
-}
 .card .rating .block_hum{
   position: absolute;
   width: 2px;
@@ -390,11 +543,7 @@ export default {
   opacity: 0;
   animation: animate 0.1s linear forwards;
 }
-.card .rating .block_hum:nth-child(-n+23){
-  background: rgb(0, 255, 251);
-  box-shadow: 0 0 15px rgb(0, 255, 251), 0 0 30px rgb(0, 255, 251);
-}
-.card .rating .block_eco{
+.card .rating .block_soil{
   position: absolute;
   width: 2px;
   height: 13px;
@@ -403,10 +552,6 @@ export default {
   transform-origin: 50% 60px;
   opacity: 0;
   animation: animate 0.1s linear forwards;
-}
-.card .rating .block_eco:nth-child(-n+20){
-  background: rgb(255, 242, 0);
-  box-shadow: 0 0 15px rgb(255, 242, 0), 0 0 30px rgb(255, 242, 0);
 }
 @keyframes animate{
   to{
