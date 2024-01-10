@@ -54,38 +54,9 @@
         <li class="header-title d-flex justify-content-center">
           Thank you for sharing!
         </li>
-
-        <li class="button-container">
-          <social-sharing
-            :url="shareUrl"
-            inline-template
-            title="Vue Material Dashboard - Admin Template for Vue.js"
-            hashtags="vuejs, dashboard, vuematerial"
-            twitter-user="creativetim"
-          >
-            <div class="centered-buttons">
-              <ShareNetwork
-                title=""
-                url="https://www.creative-tim.com/product/vue-material-dashboard"
-                network="facebook"
-                class="md-button md-round md-just-icon md-facebook"
-              >
-                <i class="fab fa-facebook-f"></i>
-              </ShareNetwork>
-              <ShareNetwork
-                url="https://www.creative-tim.com/product/vue-material-dashboard"
-                title=""
-                network="twitter"
-                class="md-button md-round md-just-icon md-twitter"
-              >
-                <i class="fab fa-twitter"></i>
-              </ShareNetwork>
-            </div>
-          </social-sharing>
-        </li>
         <li class="github-buttons">
           <gh-btns-star
-            slug="creativetimofficial/vue-material-dashboard"
+            slug="https://github.com/MohammadAliHasanLafta/Farm-Dashboard"
             show-count
           ></gh-btns-star>
         </li>
@@ -95,21 +66,19 @@
 </template>
 <script>
 import Vue from "vue";
-import SocialSharing from "vue-social-sharing";
 import VueGitHubButtons from "vue-github-buttons";
 import "vue-github-buttons/dist/vue-github-buttons.css";
 
-Vue.use(SocialSharing);
 Vue.use(VueGitHubButtons, { useCache: true });
 export default {
-  components: { SocialSharing },
+  components: { },
   data() {
     return {
       documentationLink:
-        "https://creativetimofficial.github.io/vue-material-dashboard/documentation",
-      shareUrl: "https://www.creative-tim.com/product/vue-material-dashboard",
+        "https://github.com/MohammadAliHasanLafta/Farm-Dashboard",
+      shareUrl: "https://github.com/MohammadAliHasanLafta",
       buyUrl: "",
-      freeUrl: "https://www.creative-tim.com/product/vue-material-dashboard",
+      freeUrl: "https://github.com/MohammadAliHasanLafta",
       isOpen: false,
       sidebarColors: [
         { color: "purple", active: false },
